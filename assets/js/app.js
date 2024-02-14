@@ -13,23 +13,22 @@ class Product {
 }
 
 class ProductItem {
-  constructor(Product) {
-    this.Product = Product;
+  constructor(product) {
+    this.product = product;
   }
   addToCart() {
-    console.log("adding product to cart...");
-    console.log(this.Product);
+    App.addProductToCart(this.product);
   }
   render() {
     const prodEl = document.createElement("li");
     prodEl.className = "product-item";
     prodEl.innerHTML = `
       <div>
-        <img src="${this.Product.ImageUrl}" alt ="${this.Product.title}>
+        <img src="${this.product.ImageUrl}" alt ="${this.product.title}>
         <div class="product-item__content">
-          <h2>${this.Product.title}</h2>
-          <h3>\$${this.Product.price}</h3>
-          <p>${this.Product.description}</p>
+          <h2>${this.product.title}</h2>
+          <h3>\$${this.product.price}</h3>
+          <p>${this.product.description}</p>
           <button >Add to card</button>
         </div>
       </div>
@@ -42,7 +41,24 @@ class ProductItem {
 
 class ShopingCart {
   item = [];
-
+  set cartItem(value) {
+    this.item = value;
+    this.totalOutput.innerHTML = `<h2>total \$ ${this.totalAmount.toFixed(
+      2
+    )}</h2>`;
+  }
+  get totalAmount() {
+    const sum = this.item.reduce(
+      (prevVal, curItem) => prevVal + curItem.price,
+      0
+    );
+    return sum;
+  }
+  addProduct(product) {
+    const updatedItme = [...this.item];
+    updatedItme.push(product);
+    this.cartItem = updatedItme;
+  }
   render() {
     const cartEl = document.createElement("section");
     cartEl.innerHTML = `
@@ -52,6 +68,7 @@ class ShopingCart {
     
     `;
     cartEl.classList.add("cart");
+    this.totalOutput = cartEl.querySelector("h2");
     return cartEl;
   }
 }
@@ -87,8 +104,8 @@ class ProductList {
 class Shop {
   render() {
     const root = document.getElementById("app");
-    const cart = new ShopingCart();
-    const cartEl = cart.render();
+    this.cart = new ShopingCart();
+    const cartEl = this.cart.render();
     const productList = new ProductList();
     const prodListEl = productList.render();
 
@@ -97,6 +114,16 @@ class Shop {
   }
 }
 
-const shop = new Shop();
+class App {
+  static cart;
+  static init() {
+    const shop = new Shop();
+    shop.render();
+    this.cart = shop.cart;
+  }
+  static addProductToCart(product) {
+    this.cart.addProduct(product);
+  }
+}
 
-shop.render();
+App.init();
