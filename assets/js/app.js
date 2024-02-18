@@ -92,18 +92,25 @@ class ShopingCart extends Component {
     updatedItme.push(product);
     this.cartItem = updatedItme;
   }
+  orderProducts() {
+    console.log("ordering...");
+    console.log(this.item);
+  }
   render() {
     const cartEl = this.createRootEl("section", "cart");
     cartEl.innerHTML = `
       <h2>total \$ ${0}</h2>
       <button>Order Now!</button>
     `;
+    const orderBtn = cartEl.querySelector("button");
+    // orderBtn.addEventListener("click", () => this.orderProducts);
+    orderBtn.addEventListener("click", () => this.orderProducts());
     this.totalOutput = cartEl.querySelector("h2");
   }
 }
 
 class ProductList extends Component {
-  products = [];
+  #products = [];
   constructor(renderHookId) {
     super(renderHookId);
     this.fetchProducts();
