@@ -12,16 +12,47 @@ class Product {
   }
 }
 
-class ProductItem {
-  constructor(product) {
+class ElementAtt {
+  constructor(attrName, attrValue) {
+    this.name = attrName;
+    this.value = attrValue;
+  }
+}
+
+class Component {
+  constructor(renderHook, shouldRender = true) {
+    this.hookId = renderHook;
+    if (shouldRender) {
+      this.render();
+    }
+  }
+  render() {}
+  createRootEl(tag, cssClasses, attributes) {
+    const rootEl = document.createElement(tag);
+    if (cssClasses) {
+      rootEl.className = cssClasses;
+    }
+    if (attributes && attributes.length > 0) {
+      for (const attr of attributes) {
+        rootEl.setAttribute(attr.name, attr.value);
+      }
+    }
+    document.getElementById(this.hookId).append(rootEl);
+    return rootEl;
+  }
+}
+
+class ProductItem extends Component {
+  constructor(product, renderHookId) {
+    super(renderHookId, false);
     this.product = product;
+    this.render();
   }
   addToCart() {
     App.addProductToCart(this.product);
   }
   render() {
-    const prodEl = document.createElement("li");
-    prodEl.className = "product-item";
+    const prodEl = this.createRootEl("li", "product-item");
     prodEl.innerHTML = `
       <div>
         <img src="${this.product.ImageUrl}" alt ="${this.product.title}>
@@ -35,11 +66,10 @@ class ProductItem {
       `;
     const addCartBtn = prodEl.querySelector("button");
     addCartBtn.addEventListener("click", this.addToCart.bind(this));
-    return prodEl;
   }
 }
 
-class ShopingCart {
+class ShopingCart extends Component {
   item = [];
   set cartItem(value) {
     this.item = value;
@@ -54,63 +84,70 @@ class ShopingCart {
     );
     return sum;
   }
+  constructor(renderHookId) {
+    super(renderHookId);
+  }
   addProduct(product) {
     const updatedItme = [...this.item];
     updatedItme.push(product);
     this.cartItem = updatedItme;
   }
   render() {
-    const cartEl = document.createElement("section");
+    const cartEl = this.createRootEl("section", "cart");
     cartEl.innerHTML = `
       <h2>total \$ ${0}</h2>
       <button>Order Now!</button>
-
-    
     `;
-    cartEl.classList.add("cart");
     this.totalOutput = cartEl.querySelector("h2");
-    return cartEl;
   }
 }
 
-class ProductList {
-  products = [
-    new Product(
-      "apple Visenpro",
-      "https://www.technolife.ir/image/small_product-TLP-33907_cc6726dd-282d-457e-96b9-bd078e9ab74c.png",
-      "future of technology",
-      19.99
-    ),
-    new Product(
-      "gaming laptop",
-      "https://www.technolife.ir/image/small_product-TLP-18647_e7f27822-965e-4a10-a1ab-71cff92f430c.png",
-      "future of gameing",
-      19.99
-    ),
-  ];
-  constructor() {}
-  render() {
-    const prodList = document.createElement("ul");
-    prodList.className = "product-list";
+class ProductList extends Component {
+  products = [];
+  constructor(renderHookId) {
+    super(renderHookId);
+    this.fetchProducts();
+  }
+  fetchProducts() {
+    this.products = [
+      new Product(
+        "apple Visenpro",
+        "https://www.technolife.ir/image/small_product-TLP-33907_cc6726dd-282d-457e-96b9-bd078e9ab74c.png",
+        "future of technology",
+        19.99
+      ),
+      new Product(
+        "gaming laptop",
+        "https://www.technolife.ir/image/small_product-TLP-18647_e7f27822-965e-4a10-a1ab-71cff92f430c.png",
+        "future of gameing",
+        19.99
+      ),
+    ];
+    this.renderProduct();
+  }
+  renderProduct() {
     for (const prod of this.products) {
-      const productItem = new ProductItem(prod);
-      const prodEl = productItem.render();
-      prodList.append(prodEl);
+      new ProductItem(prod, "prod-list");
     }
-    return prodList;
+  }
+  render() {
+    const prodList = this.createRootEl("ul", "product-list", [
+      new ElementAtt("id", "prod-list"),
+    ]);
+    if (this.products && this.products.length > 0) {
+      this.renderProduct();
+    }
   }
 }
 
-class Shop {
+class Shop extends Component {
+  constructor() {
+    // this.render();
+    super();
+  }
   render() {
-    const root = document.getElementById("app");
-    this.cart = new ShopingCart();
-    const cartEl = this.cart.render();
-    const productList = new ProductList();
-    const prodListEl = productList.render();
-
-    root.append(cartEl);
-    root.append(prodListEl);
+    this.cart = new ShopingCart("app");
+    new ProductList("app");
   }
 }
 
@@ -118,7 +155,6 @@ class App {
   static cart;
   static init() {
     const shop = new Shop();
-    shop.render();
     this.cart = shop.cart;
   }
   static addProductToCart(product) {
